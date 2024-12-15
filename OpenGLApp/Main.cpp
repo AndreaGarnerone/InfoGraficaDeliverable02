@@ -123,6 +123,7 @@ int main()
 	// ----------------------------
 	Shader shader("text.vs", "text.fs");
 	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT));
+	shader.setMat4("projection", projection);
 	shader.use();
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -461,20 +462,18 @@ int main()
 
 		// Activate shader
 		ourShader.use();
+		//// Bind textures
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, texture1);
+		//ourShader.setInt("texture1", 0);
 
-		// Bind textures
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-		ourShader.setInt("texture1", 0);
+		//glActiveTexture(GL_TEXTURE1);
+		//glBindTexture(GL_TEXTURE_2D, texture2);
+		//ourShader.setInt("texture2", 1);
 
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
-		ourShader.setInt("texture2", 1);
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, texture3);
-		ourShader.setInt("texture3", 2);
-
+		//glActiveTexture(GL_TEXTURE2);
+		//glBindTexture(GL_TEXTURE_2D, texture3);
+		//ourShader.setInt("texture3", 2);
 		// Set projection and view matrices
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		ourShader.setMat4("projection", projection);
@@ -483,12 +482,12 @@ int main()
 
 		// Render conveyor belt
 		ourShader.use();
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, texture3);
+		ourShader.setInt("texture3", 2);
 		glBindVertexArray(conveyorVAO);
+
 		// Apply transformations if needed
- /*       glm::mat4 model = glm::translate(glm::mat4(1.0f), conveyorBeltPosition);
-		ourShader.setMat4("model", model);
-		ourShader.setInt("textureID", 3);
-		glDrawArrays(GL_TRIANGLES, 0, 6);*/
 		glm::mat4 model = glm::mat4(1.0f);
 		for (int i = 0; i < 2; i++) {
 			conveyorBeltPositions[i].y -= conveyorSpeed;
@@ -515,14 +514,28 @@ int main()
 		ourShader.setInt("textureID", 1);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
+		// render text
+		//shader.use();
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR) {
+			std::cout << "OpenGL Error: " << error << std::endl;
+		}
+		RenderText(shader, "Ingredienti: ", 25.0f, 25.0f, 1.0f, glm::vec3(0.55f, 0.10f, 0.01f));
+		GLenum afterError = glGetError();
+		if (error != GL_NO_ERROR) {
+			std::cout << "OpenGL Error: " << afterError << std::endl;
+		}
+		ourShader.use();
+
 		// render cubes
+//ourShader.use();
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+		//ourShader.setInt("texture2", 1);
 		glBindVertexArray(plateVAO);
 		glBindVertexArray(conveyorVAO);
 		ourShader.setInt("textureID", 2);
 		glBindVertexArray(VAO);
-
-		// render text
-		//RenderText(shader, "X", 25.0f, 25.0f, 1.0f, glm::vec3(-0.55f, 0.10f, 0.01f));
 
 		// Swap buffers and poll events
 		glfwSwapBuffers(window);
@@ -654,8 +667,8 @@ void RenderText(Shader& s, std::string text, float x, float y, float scale, glm:
 	glUniform3f(glGetUniformLocation(s.ID, "textColor"), color.x, color.y, color.z);
 
 	//// Enable blending to handle glyph transparency
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(txtVAO);
@@ -664,6 +677,11 @@ void RenderText(Shader& s, std::string text, float x, float y, float scale, glm:
 	std::string::const_iterator c;
 	for (c = text.begin(); c != text.end(); c++)
 	{
+		if (Characters.find(*c) == Characters.end()) {
+			std::cout << "LOL" << std::endl;
+			continue; // Skip missing characters
+		}
+
 		Character ch = Characters[*c];
 
 		float xpos = x + ch.Bearing.x * scale;
