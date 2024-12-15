@@ -515,16 +515,8 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// render text
-		//shader.use();
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR) {
-			std::cout << "OpenGL Error: " << error << std::endl;
-		}
-		RenderText(shader, "Ingredienti: ", 25.0f, 25.0f, 1.0f, glm::vec3(0.55f, 0.10f, 0.01f));
-		GLenum afterError = glGetError();
-		if (error != GL_NO_ERROR) {
-			std::cout << "OpenGL Error: " << afterError << std::endl;
-		}
+		std::string score = "Ingredienti: " + std::to_string(numberOfCollisions);
+		RenderText(shader, score, 25.0f, 25.0f, 1.0f, glm::vec3(0.55f, 0.10f, 0.01f));
 		ourShader.use();
 
 		// render cubes
