@@ -1,3 +1,4 @@
 ﻿  Main.cpp
+C:\Users\franc\OneDrive\Documents\Coding\OpenGL\TEST\InfoGraficaDeliverable02\OpenGLApp\Main.cpp(184,24): warning C4838: la conversione da 'FT_Pos' a 'unsigned int' richiede una conversione che supporta un minor numero di dati
 LINK : warning LNK4098: la libreria predefinita 'MSVCRT' è in conflitto con l'utilizzo di altre librerie; usare /NODEFAULTLIB:libreria
-  OpenGLApp.vcxproj -> C:\Users\aagar\Documents\Informatica Grafica\deliver2\OpenGLApp\x64\Debug\OpenGLApp.exe
+  OpenGLApp.vcxproj -> C:\Users\franc\OneDrive\Documents\Coding\OpenGL\TEST\InfoGraficaDeliverable02\x64\Debug\OpenGLApp.exe

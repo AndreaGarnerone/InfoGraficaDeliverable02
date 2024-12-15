@@ -4,6 +4,7 @@ project(OpenGLApp)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(OpenGLApp)
+include_directories(OpenGLApp/freetype)
 include_directories("OpenGLApp/Examples/Example 10")
 include_directories("OpenGLApp/Examples/Example 11")
 include_directories("OpenGLApp/Examples/Example 12")
@@ -136,6 +137,7 @@ add_executable(OpenGLApp
         OpenGLApp/Exercises/Exercise6/stb_image.h
         OpenGLApp/Exercises/Exercise_01.cpp
         OpenGLApp/camera.h
+        OpenGLApp/ft2build.h
         OpenGLApp/glad.c
         OpenGLApp/Main.cpp
         OpenGLApp/shader_s.h
