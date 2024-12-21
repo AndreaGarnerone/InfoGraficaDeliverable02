@@ -16,6 +16,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <irrKlang.h>
+using namespace irrklang;
+
 // Collision handling
 	// AABB (Axis-Aligned Bounding Box) structure
 struct AABB {
@@ -40,7 +43,9 @@ void processInput(GLFWwindow* window);
 glm::vec3 generateRandomPosition();
 AABB createAABB(const glm::vec3& position);
 bool checkCollision(const AABB& a, const AABB& b);
-void RenderText(Shader& s, std::string text, float x, float y, float scale, glm::vec3 color);
+void renderText(Shader& s, std::string text, float x, float y, float scale, glm::vec3 color);
+void initFreetype(const char* fontPath);
+
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -69,6 +74,8 @@ float plateVerteces[] = {
 };
 glm::vec3 platePosition = { 0.0f, -1.10f, 0.0f };
 
+ISoundEngine* soundEngine = createIrrKlangDevice();
+
 int main()
 {
 
@@ -85,7 +92,7 @@ int main()
 
 	// glfw window creation
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Example19", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Collect it!", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -123,7 +130,9 @@ int main()
 	// ----------------------------
 	Shader shader("text.vs", "text.fs");
 	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT));
-	shader.setMat4("projection", projection);
+	shader.use();
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
 	shader.use();
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -136,6 +145,11 @@ int main()
 	FT_Face face;
 	if (FT_New_Face(ft, font_name.c_str(), 0, &face)) {
 		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+		return -1;
+	}
+
+	if (!soundEngine) {
+		std::cerr << "Could not initialize irrKlang sound engine" << std::endl;
 		return -1;
 	}
 
@@ -390,6 +404,7 @@ int main()
 	//float activationTime[] = { 0.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f, 14.0f, 16.0f, 18.0f, 20.0f, 22.0f, 24.0f, 26.0f, 28.0f, 30.0f, 32.0f, 34.0f, 36.0f, 38.0f, 40.0f }; // Base activation time
 
 	int numberOfCollisions = 0;
+	int numberOfObject = 1;
 
 	float pastTime = 0.0f;
 	float delay = 2.0f;
@@ -397,6 +412,9 @@ int main()
 	float increaseDifficulty = 5.0f;
 	float pastDifficulty = 0.0f;
 	int level = 1;
+
+	std::string collisionMessage = "Object collected: " + std::to_string(numberOfCollisions);
+	std::string objectMessage = "Object dropped: " + std::to_string(numberOfObject);
 
 	// render loop
 	// -----------
@@ -425,11 +443,15 @@ int main()
 			// keep adding cubes
 			objectsPositions.push_back(generateRandomPosition());
 			std::cout << "Spawned at " << currentTime << " with speed " << cubeSpeed << " with delay " << delay << std::endl;
+			numberOfObject++;
 			// update pastTime for delay
 			pastTime = currentTime;
+
+			objectMessage = "Object dropped: " + std::to_string(numberOfObject);
 		}
 
 		// RENDER CUBES
+		ourShader.use();
 		for (unsigned int i = 0; i < objectsPositions.size(); i++) {
 
 			if (objectsPositions[i].y <= -1.10f) {
@@ -451,29 +473,33 @@ int main()
 				numberOfCollisions++;
 				// Optional: handle collision, e.g., remove object or reset position
 				objectsPositions[i].y = -10.0f; // Move off-screen after collision
+
+				collisionMessage = "Object collected: " + std::to_string(numberOfCollisions);
+				soundEngine->play2D("C:/Users/aagar/Documents/InfoGrafica/OpenGLApp  - demos/OpenGLApp/OpenGLApp/pickup_sound.wav", false);
 			}
 
-			// Render object (cube)
+
+			// Render cube
 			glm::mat4 objModel = glm::mat4(1.0f);
 			objModel = glm::translate(objModel, objectsPositions[i]);
 			ourShader.setMat4("model", objModel);
+			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
-		// Activate shader
-		ourShader.use();
-		//// Bind textures
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, texture1);
-		//ourShader.setInt("texture1", 0);
+		// Bind textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		ourShader.setInt("texture1", 0);
 
-		//glActiveTexture(GL_TEXTURE1);
-		//glBindTexture(GL_TEXTURE_2D, texture2);
-		//ourShader.setInt("texture2", 1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+		ourShader.setInt("texture2", 1);
 
-		//glActiveTexture(GL_TEXTURE2);
-		//glBindTexture(GL_TEXTURE_2D, texture3);
-		//ourShader.setInt("texture3", 2);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, texture3);
+		ourShader.setInt("texture3", 2);
+
 		// Set projection and view matrices
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		ourShader.setMat4("projection", projection);
@@ -482,12 +508,12 @@ int main()
 
 		// Render conveyor belt
 		ourShader.use();
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, texture3);
-		ourShader.setInt("texture3", 2);
 		glBindVertexArray(conveyorVAO);
-
 		// Apply transformations if needed
+		/*glm::mat4 model = glm::translate(glm::mat4(1.0f), conveyorBeltPosition);
+		ourShader.setMat4("model", model);
+		ourShader.setInt("textureID", 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6);*/
 		glm::mat4 model = glm::mat4(1.0f);
 		for (int i = 0; i < 2; i++) {
 			conveyorBeltPositions[i].y -= conveyorSpeed;
@@ -514,27 +540,30 @@ int main()
 		ourShader.setInt("textureID", 1);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		// render text
-		std::string score = "Ingredienti: " + std::to_string(numberOfCollisions);
-		RenderText(shader, score, 25.0f, 25.0f, 1.0f, glm::vec3(0.55f, 0.10f, 0.01f));
-		ourShader.use();
-
 		// render cubes
-//ourShader.use();
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
-		//ourShader.setInt("texture2", 1);
 		glBindVertexArray(plateVAO);
 		glBindVertexArray(conveyorVAO);
 		ourShader.setInt("textureID", 2);
 		glBindVertexArray(VAO);
+
+		// Render text
+		glUseProgram(shader.ID); // Use text shader
+		renderText(shader, objectMessage, 10.0f, 550.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f));
+		renderText(shader, collisionMessage, 10.0f, 480.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+		// Restore OpenGL state for 3D rendering
+		glBindVertexArray(0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_BLEND);
 
 		// Swap buffers and poll events
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
+	std::cout << "Oggetti: " << numberOfObject << std::endl;
 	std::cout << "Collisioni: " << numberOfCollisions << std::endl;
+
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
 	glDeleteVertexArrays(1, &conveyorVAO);
@@ -545,6 +574,8 @@ int main()
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+
+	soundEngine->drop();
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
@@ -575,14 +606,20 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		if (platePosition.x <= 0.45f)   // if plate in border
+		if (platePosition.x <= 0.45f) // if plate in border
 			platePosition.x += 0.03f;  // Move plate right
-		else platePosition.x = 0.45f;
+		else {
+			platePosition.x = 0.45f;
+			// soundEngine->play2D("C:/Users/aagar/Documents/InfoGrafica/OpenGLApp  - demos/OpenGLApp/OpenGLApp/hitting_wall.wav", false);
+		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		if (platePosition.x >= -0.45f)  // if plate in border
+		if (platePosition.x >= -0.45f) // if plate in border
 			platePosition.x -= 0.03f;  // Move plate left
-		else platePosition.x = -0.45f;
+		else {
+			platePosition.x = -0.45f;
+			// soundEngine->play2D("C:/Users/aagar/Documents/InfoGrafica/OpenGLApp  - demos/OpenGLApp/OpenGLApp/hitting_wall.wav", false);
+		}
 	}
 
 	/*
@@ -652,13 +689,12 @@ bool checkCollision(const AABB& a, const AABB& b) {
 		(a.max.z >= b.min.z && a.min.z <= b.max.z);
 }
 
-void RenderText(Shader& s, std::string text, float x, float y, float scale, glm::vec3 color)
-{
+void renderText(Shader& s, std::string text, float x, float y, float scale, glm::vec3 color) {
 	// activate corresponding render state	
 	s.use();
 	glUniform3f(glGetUniformLocation(s.ID, "textColor"), color.x, color.y, color.z);
 
-	//// Enable blending to handle glyph transparency
+	// Enable blending to handle glyph transparency
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -669,11 +705,6 @@ void RenderText(Shader& s, std::string text, float x, float y, float scale, glm:
 	std::string::const_iterator c;
 	for (c = text.begin(); c != text.end(); c++)
 	{
-		if (Characters.find(*c) == Characters.end()) {
-			std::cout << "LOL" << std::endl;
-			continue; // Skip missing characters
-		}
-
 		Character ch = Characters[*c];
 
 		float xpos = x + ch.Bearing.x * scale;
