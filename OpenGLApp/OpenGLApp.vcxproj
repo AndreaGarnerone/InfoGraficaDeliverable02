@@ -110,13 +110,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\irrKlang-64bit-1.6.0\include;C:\Users\aagar\Downloads\ft2133\freetype-2.13.3\include;..\..\glm-master;..\..\glad\include;..\..\glfw-3.3.8.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\assimp\include;C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\irrKlang-64bit-1.6.0\include;C:\Users\aagar\Downloads\ft2133\freetype-2.13.3\include;..\..\glm-master;..\..\glad\include;..\..\glfw-3.3.8.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\irrKlang-64bit-1.6.0;..\..\glfw-3.3.8.bin.WIN64\lib-vc2022;C:\Users\aagar\Downloads\ft2133\freetype-2.13.3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;C:\Users\aagar\Downloads\ft2133\freetype-2.13.3\objs\freetype.lib;C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\irrKlang-64bit-1.6.0\lib\Winx64-visualStudio\irrKlang.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\assimp;C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\irrKlang-64bit-1.6.0;..\..\glfw-3.3.8.bin.WIN64\lib-vc2022;C:\Users\aagar\Downloads\ft2133\freetype-2.13.3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;C:\Users\aagar\Downloads\ft2133\freetype-2.13.3\objs\freetype.lib;C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\irrKlang-64bit-1.6.0\lib\Winx64-visualStudio\irrKlang.lib;C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\assimp\lib\x64\assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -1,4 +1,6 @@
 ﻿  Main.cpp
-C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\OpenGLApp\OpenGLApp\Main.cpp(199,24): warning C4838: la conversione da 'FT_Pos' a 'unsigned int' richiede una conversione che supporta un minor numero di dati
-LINK : warning LNK4098: la libreria predefinita 'MSVCRT' è in conflitto con l'utilizzo di altre librerie; usare /NODEFAULTLIB:libreria
+C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\OpenGLApp\OpenGLApp\Main.cpp(131,44): warning C4267: 'argomento': conversione da 'size_t' a 'GLsizei'. Possibile perdita di dati.
+C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\OpenGLApp\OpenGLApp\Main.cpp(382,24): warning C4838: la conversione da 'FT_Pos' a 'unsigned int' richiede una conversione che supporta un minor numero di dati
+C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\OpenGLApp\OpenGLApp\Main.cpp(667,17): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\OpenGLApp\OpenGLApp\Main.cpp(676,17): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
   OpenGLApp.vcxproj -> C:\Users\aagar\Documents\InfoGrafica\OpenGLApp  - demos\OpenGLApp\x64\Debug\OpenGLApp.exe
