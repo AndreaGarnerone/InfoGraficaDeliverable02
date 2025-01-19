@@ -40,6 +40,13 @@ struct Character {
 	unsigned int Advance; // Horizontal offset to advance to next glyph
 };
 
+struct Food {
+	glm::vec3 position;
+	int type;
+};
+
+std::vector<Food> foods;
+
 std::map<char, Character> Characters;
 unsigned int txtVAO, txtVBO;
 
@@ -56,6 +63,9 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+
+// lighting
+glm::vec3 lightPos(0.2f, 0.10f, 0.01f);
 
 float plateVerteces[] = {
 	// first triangle
@@ -81,6 +91,7 @@ AABB createAABB(const glm::vec3& position);
 bool checkCollision(const AABB& a, const AABB& b);
 void renderText(Shader& s, std::string text, float x, float y, float scale, glm::vec3 color);
 unsigned int TextureFromFile(const char* path, const std::string& directory);
+int generateRandomObject();
 
 // Struct for Vertex
 struct Vertex {
@@ -302,9 +313,10 @@ int main()
 	// ------------------------------------
 	Shader ourShader("shader.vs", "shader.fs");
 
-	Model croissantModel("C:/Users/aagar/Documents/InfoGrafica/OpenGLApp  - demos/OpenGLApp/OpenGLApp/croissant.obj");
-	Model plateModel("C:/Users/aagar/Documents/InfoGrafica/OpenGLApp  - demos/OpenGLApp/OpenGLApp/sgorbio.obj");
-	Model otherModel("C:/Users/aagar/Documents/InfoGrafica/OpenGLApp  - demos/OpenGLApp/OpenGLApp/togocup.obj");
+	Model croissantModel("C:/Users/franc/OneDrive/Documents/Coding/OpenGL/del3/del3/OpenGLApp/croissant.obj");
+	Model plateModel("C:/Users/franc/OneDrive/Documents/Coding/OpenGL/del3/del3/OpenGLApp/sgorbio.obj");
+	Model otherModel("C:/Users/franc/OneDrive/Documents/Coding/OpenGL/del3/del3/OpenGLApp/togocup.obj");
+	Model muffinModel("C:/Users/franc/OneDrive/Documents/Coding/OpenGL/del3/del3/OpenGLApp/gus2.obj"); //con muffin.obj crasha
 
 	// Text handling
 	// --------------------------------------
@@ -434,8 +446,13 @@ int main()
 	};
 	// world space positions of the objects
 
-	std::vector<glm::vec3> objectsPositions;
+	std::vector<glm::vec3> objectsPositions; //OBSOLETE
 	objectsPositions.push_back(generateRandomPosition());
+
+	Food food;
+	food.position = generateRandomPosition();
+	food.type = generateRandomObject();
+	foods.push_back(food);
 
 	// Declare VAO and VBO for the conveyor belt
 	unsigned int conveyorVAO, conveyorVBO;
@@ -584,6 +601,73 @@ int main()
 	ourShader.setInt("texture2", 1);
 	ourShader.setInt("texture3", 2);
 
+	//----------- BEGIN lightning stuff
+	Shader lightingShader("shader_light.vs", "shader_light.fs");
+
+	float lightVertices[] = {
+	-0.5f, -0.5f, -0.5f,  // Front-bottom-left
+	 0.5f, -0.5f, -0.5f,  // Front-bottom-right
+	 0.5f,  0.5f, -0.5f,  // Front-top-right
+	 0.5f,  0.5f, -0.5f,  // Front-top-right
+	-0.5f,  0.5f, -0.5f,  // Front-top-left
+	-0.5f, -0.5f, -0.5f,  // Front-bottom-left
+
+	-0.5f, -0.5f,  0.5f,  // Back-bottom-left
+	 0.5f, -0.5f,  0.5f,  // Back-bottom-right
+	 0.5f,  0.5f,  0.5f,  // Back-top-right
+	 0.5f,  0.5f,  0.5f,  // Back-top-right
+	-0.5f,  0.5f,  0.5f,  // Back-top-left
+	-0.5f, -0.5f,  0.5f,  // Back-bottom-left
+
+	-0.5f,  0.5f,  0.5f,  // Top-back-left
+	-0.5f,  0.5f, -0.5f,  // Top-front-left
+	 0.5f,  0.5f, -0.5f,  // Top-front-right
+	 0.5f,  0.5f, -0.5f,  // Top-front-right
+	 0.5f,  0.5f,  0.5f,  // Top-back-right
+	-0.5f,  0.5f,  0.5f,  // Top-back-left
+
+	-0.5f, -0.5f, -0.5f,  // Bottom-front-left
+	-0.5f, -0.5f,  0.5f,  // Bottom-back-left
+	 0.5f, -0.5f,  0.5f,  // Bottom-back-right
+	 0.5f, -0.5f,  0.5f,  // Bottom-back-right
+	 0.5f, -0.5f, -0.5f,  // Bottom-front-right
+	-0.5f, -0.5f, -0.5f   // Bottom-front-left
+	};
+
+	unsigned int lightVAO, lightVBO;
+
+	// Create the VAO and VBO
+	glGenVertexArrays(1, &lightVAO);
+	glGenBuffers(1, &lightVBO);
+
+	// Bind the VAO
+	glBindVertexArray(lightVAO);
+
+	// Bind the VBO and load data
+	glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(lightVertices), lightVertices, GL_STATIC_DRAW);
+
+	// Define the vertex position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// Unbind the VAO and VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	// Set light properties
+	lightingShader.use();
+	lightingShader.setVec3("light.position", lightPos);
+	lightingShader.setVec3("light.color", glm::vec3(1.0f, 0.0f, 0.0f)); // Red light
+	lightingShader.setVec3("viewPos", camera.Position);
+
+	// Model transformation matrix
+	glm::mat4 lightModel = glm::mat4(1.0f);
+	lightingShader.setMat4("model", lightModel);
+	lightingShader.setMat4("view", camera.GetViewMatrix());
+	lightingShader.setMat4("projection", projection);
+	//----------- END lightning stuff
+
 	//float activationTime[] = { 0.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f, 14.0f, 16.0f, 18.0f, 20.0f, 22.0f, 24.0f, 26.0f, 28.0f, 30.0f, 32.0f, 34.0f, 36.0f, 38.0f, 40.0f }; // Base activation time
 
 	int numberOfCollisions = 0;
@@ -592,7 +676,7 @@ int main()
 	float pastTime = 0.0f;
 	float delay = 2.0f;
 	float cubeSpeed = 0.007f;
-	float increaseDifficulty = 5.0f;
+	float increaseDifficulty = 6.0f;
 	float pastDifficulty = 0.0f;
 	int level = 1;
 
@@ -612,6 +696,9 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		/*glBindVertexArray(lightCubeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);*/
+
 		// Handle continuous cube appearance
 		float currentTime = static_cast<float>(glfwGetTime());
 
@@ -624,7 +711,12 @@ int main()
 
 		if (currentTime >= pastTime + delay) {
 			// keep adding cubes
-			objectsPositions.push_back(generateRandomPosition());
+			Food food;
+			food.position = generateRandomPosition();
+			food.type = generateRandomObject();	
+			foods.push_back(food);
+
+			//objectsPositions.push_back(generateRandomPosition());
 			std::cout << "Spawned at " << currentTime << " with speed " << cubeSpeed << " with delay " << delay << std::endl;
 			numberOfObject++;
 			// update pastTime for delay
@@ -635,18 +727,18 @@ int main()
 
 		// RENDER CUBES
 		ourShader.use();
-		for (unsigned int i = 0; i < objectsPositions.size(); i++) {
+		for (unsigned int i = 0; i < foods.size(); i++) {
 
-			if (objectsPositions[i].y <= -1.10f) {
+			if (foods[i].position.y <= -1.10f) {
 				// Reset or remove objects off-screen
 				continue;
 			}
 
 			// Update position
-			objectsPositions[i].y -= cubeSpeed;
+			foods[i].position.y -= cubeSpeed;
 
 			// Create AABB for the current object after position update
-			AABB objectAABB = createAABB(objectsPositions[i]);
+			AABB objectAABB = createAABB(foods[i].position);
 
 			// Create AABB for the plate (static position)
 			AABB plateAABB = createAABB(platePosition);
@@ -655,32 +747,42 @@ int main()
 			if (checkCollision(objectAABB, plateAABB)) {
 				numberOfCollisions++;
 				// Optional: handle collision, e.g., remove object or reset position
-				objectsPositions[i].y = -10.0f; // Move off-screen after collision
+				foods[i].position.y = -10.0f; // Move off-screen after collision
 
 				collisionMessage = "Object collected: " + std::to_string(numberOfCollisions);
-				soundEngine->play2D("C:/Users/aagar/Documents/InfoGrafica/OpenGLApp  - demos/OpenGLApp/OpenGLApp/pickup_sound.wav", false);
+				soundEngine->play2D("C:/Users/franc/OneDrive/Documents/Coding/OpenGL/del3/del3/OpenGLApp/pickup_sound.wav", false);
 			}
 
 			// Render cube
 			glm::mat4 objModel = glm::mat4(1.0f);
-			if (i % 2 == 0) {
+			if (foods[i].type == 0) {
 				float angle = glfwGetTime(); // Use the current time as the angle in radians
-				objModel = glm::translate(objModel, objectsPositions[i]);
+				objModel = glm::translate(objModel, foods[i].position);
 				objModel = glm::scale(objModel, glm::vec3(0.3f, 0.3f, 0.3f));
 				objModel = glm::rotate(objModel, angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
 				//ourShader.setInt("textureID", 1);	// still show the croissant white
 				ourShader.setMat4("model", objModel);
 				croissantModel.Draw(ourShader);
-			} else {
+			} else if (foods[i].type == 1) {
 				float angle = glfwGetTime(); // Use the current time as the angle in radians
-				objModel = glm::translate(objModel, objectsPositions[i]);
+				objModel = glm::translate(objModel, foods[i].position);
 				objModel = glm::scale(objModel, glm::vec3(0.1f, 0.1f, 0.1f));
 				objModel = glm::rotate(objModel, angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
 				//ourShader.setInt("textureID", 1);	// still show the croissant white
 				ourShader.setMat4("model", objModel);
 				otherModel.Draw(ourShader);
+			}
+			else if (foods[i].type == 2) {
+				float angle = glfwGetTime(); // Use the current time as the angle in radians
+				objModel = glm::translate(objModel, foods[i].position);
+				objModel = glm::scale(objModel, glm::vec3(0.1f, 0.1f, 0.1f));
+				objModel = glm::rotate(objModel, angle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+				//ourShader.setInt("textureID", 1);	// still show the croissant white
+				ourShader.setMat4("model", objModel);
+				muffinModel.Draw(ourShader);
 			}
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -729,6 +831,31 @@ int main()
 			glBindVertexArray(conveyorVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+
+		// be sure to activate shader when setting uniforms/drawing objects
+		//lightingShader.use();
+		ourShader.setVec3("light.position", lightPos);
+		ourShader.setVec3("viewPos", camera.Position);
+
+		// light properties
+		glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+		
+		//pulsing light (?)
+		/*lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+		lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+		lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));*/
+
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.8f); // decrease the influence
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.5f); // low influence
+		ourShader.setVec3("light.ambient", ambientColor);
+		ourShader.setVec3("light.diffuse", diffuseColor);
+		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+		// material properties
+		ourShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+		ourShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+		ourShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+		ourShader.setFloat("material.shininess", 32.0f);
 
 		// Render plate
 		glActiveTexture(GL_TEXTURE0);
@@ -794,6 +921,7 @@ int main()
 // Helper function for loading textures
 unsigned int TextureFromFile(const char* path, const std::string& directory) {
 	std::string filename = directory + "/" + std::string(path);
+	std::cout << "Loading texture: " << filename << std::endl;
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	int width, height, nrComponents;
@@ -838,6 +966,14 @@ glm::vec3 generateRandomPosition() {
 
 	/*float randomX = distX(gen);*/
 	return glm::vec3(randomX, 1.20f, 0.0f); // Fixed y and z
+}
+
+int generateRandomObject() {
+	static std::random_device rd; // Seed
+	static std::mt19937 gen(rd()); // Random number generator
+	static std::uniform_int_distribution<int> dist(0, 2); // Distribution for x
+
+	return dist(gen); 
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
